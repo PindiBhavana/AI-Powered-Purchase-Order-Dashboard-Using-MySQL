@@ -1,3 +1,4 @@
+
 import os
 
 import mysql.connector
@@ -8,11 +9,41 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def get_db_config():
+    config = {
+        "host": st.secrets.get("DB_HOST", os.getenv("DB_HOST", "localhost")),
+        "port": int(st.secrets.get("DB_PORT", os.getenv("DB_PORT", "3306"))),
+        "user": st.secrets.get("DB_USER", os.getenv("DB_USER", "")),
+        "password": st.secrets.get("DB_PASSWORD", os.getenv("DB_PASSWORD", "")),
+        "database": st.secrets.get("DB_NAME", os.getenv("DB_NAME", "")),
+    }
+
+    missing = [
+        key for key in ["user", "password", "database"]
+        if not config[key]
+    ]
+
+    if missing:
+        names = {
+            "user": "DB_USER",
+            "password": "DB_PASSWORD",
+            "database": "DB_NAME",
+        }
+        raise ValueError(
+            "Missing database environment variables: "
+            + ", ".join(names[key] for key in missing)
+        )
+
+    return config
+
+
 st.set_page_config(
     page_title="Purchase Order Dashboard",
     page_icon="📊",
     layout="wide",
 )
+
 
 # Professional Sage Green + Pastel Pink Theme
 st.markdown(
@@ -118,18 +149,10 @@ st.markdown("""
 @st.cache_data(ttl=60)
 def load_data():
     """Load purchase orders and related vendor/department information from MySQL."""
-    required_vars = ["DB_USER", "DB_PASSWORD", "DB_NAME"]
-    missing_vars = [name for name in required_vars if os.getenv(name) is None]
-    if missing_vars:
-        raise ValueError("Missing database environment variables: " + ", ".join(missing_vars))
+   
+    
+    conn = mysql.connector.connect(**get_db_config())
 
-    connection = mysql.connector.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        port=int(os.getenv("DB_PORT", "3306")),
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-    )
     try:
         query = """
             SELECT
@@ -143,9 +166,10 @@ def load_data():
             LEFT JOIN vendors v ON po.vendor_id = v.vendor_id
             LEFT JOIN departments d ON po.department_id = d.department_id
         """
-        return pd.read_sql(query, connection)
+        return pd.read_sql(query, conn)
     finally:
-        connection.close()
+        conn.close()
+
 
 
 try:
