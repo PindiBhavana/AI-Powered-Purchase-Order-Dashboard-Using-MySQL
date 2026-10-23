@@ -303,8 +303,8 @@ try:
         st.subheader("Spending by Department")
         dept_data = filtered.groupby("department_name", as_index=False)["total_po_amount"].sum().sort_values("total_po_amount", ascending=False)
         if not dept_data.empty:
-            fig = px.bar(dept_data, x="department_name", y="total_po_amount", labels={"department_name": "Department", "total_po_amount": "Purchase Order Value (₹)"}, title="Purchase Order Value by Department", color_discrete_sequence=[CHART_GREEN], text="total_po_amount")
-            fig.update_traces(marker_line_color=CHART_DARK_GREEN, marker_line_width=0.7, texttemplate="₹%{y:,.0f}", textposition="outside", cliponaxis=False)
+            fig = px.bar(dept_data, x="department_name", y="total_po_amount", labels={"department_name": "Department", "total_po_amount": "Purchase Order Value (₹)"}, title="Purchase Order Value by Department", color_discrete_sequence=["#D9534F"], text="total_po_amount")
+            fig.update_traces(marker_line_color="#B52B27", marker_line_width=0.7, texttemplate="₹%{y:,.0f}", textposition="outside", cliponaxis=False)
             fig.update_layout(xaxis_title="Department", yaxis_title="Purchase Order Value (₹)")
             st.plotly_chart(style_chart(fig), use_container_width=True)
         else:
